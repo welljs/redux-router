@@ -1,19 +1,19 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
-import { createStore, compose, combineReducers } from 'redux';
+import { createStore, compose, combineReducers, } from 'redux';
 
 import {
   ReduxRouter,
   routerStateReducer,
-  reduxReactRouter,
+  reduxRouterEnhancer,
   push,
 } from 'redux-router';
 
-import { Route, Link } from 'react-router';
+
+import { Route, Link, hashHistory } from 'react-router';
 import { Provider, connect } from 'react-redux';
 import { devTools } from 'redux-devtools';
 import { DevTools, DebugPanel, LogMonitor } from 'redux-devtools/lib/react';
-import { createHistory } from 'history';
 
 @connect((state) => ({}))
 class App extends Component {
@@ -93,7 +93,7 @@ const reducer = combineReducers({
 });
 
 const store = compose(
-  reduxReactRouter({ createHistory }),
+  reduxRouterEnhancer({ history: hashHistory }),
   devTools()
 )(createStore)(reducer);
 
@@ -102,7 +102,7 @@ class Root extends Component {
     return (
       <div>
         <Provider store={store}>
-          <ReduxRouter>
+          <ReduxRouter history={hashHistory} >
             <Route path="/" component={App}>
               <Route path="parent" component={Parent}>
                 <Route path="child" component={Child} />

@@ -4,11 +4,10 @@ import React from 'react';
 import {renderToString} from 'react-dom/server';
 import {Provider} from 'react-redux';
 import {createStore} from 'redux';
-import {ReduxRouter} from '../../src'; // 'redux-router'
-import {reduxReactRouter, match} from '../../src/server'; // 'redux-router/server';
+import { match } from 'react-router'
+import { ReduxRouterContext } from '../../src/index'; // 'redux-router'
 import qs from 'query-string';
 import serialize from 'serialize-javascript';
-import { createMemoryHistory } from 'history';
 
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
@@ -21,12 +20,12 @@ import routes from './routes';
 const app = express();
 const compiler = webpack(config);
 
-const getMarkup = (store) => {
+const getMarkup = (renderProps, store) => {
   const initialState = serialize(store.getState());
 
   const markup = renderToString(
     <Provider store={store} key="provider">
-      <ReduxRouter/>
+      <ReduxRouterContext {...renderProps} />
     </Provider>
   );
 
@@ -52,22 +51,21 @@ app.use(webpackDevMiddleware(compiler, {
 app.use(webpackHotMiddleware(compiler));
 
 app.use((req, res) => {
-  const store = reduxReactRouter({ routes, createHistory: createMemoryHistory })(createStore)(reducer);
+  const store = createStore(reducer);
   const query = qs.stringify(req.query);
   const url = req.path + (query.length ? '?' + query : '');
 
-  store.dispatch(match(url, (error, redirectLocation, routerState) => {
+  match({ routes, location: url }, (error, redirectLocation, renderProps) => {
     if (error) {
-      console.error('Router error:', error);
-      res.status(500).send(error.message);
+      res.status(500).send(error.message)
     } else if (redirectLocation) {
-      res.redirect(302, redirectLocation.pathname + redirectLocation.search);
-    } else if (!routerState) {
-      res.status(400).send('Not Found');
+      res.redirect(302, redirectLocation.pathname + redirectLocation.search)
+    } else if (renderProps) {
+      res.status(200).send(getMarkup(renderProps, store))
     } else {
-      res.status(200).send(getMarkup(store));
+      res.status(404).send('Not found')
     }
-  }));
+  });
 });
 
 app.listen(3000, 'localhost', error => {

@@ -1,29 +1,29 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { createStore, compose } from 'redux';
+import { browserHistory } from 'react-router';
 
 import {
   ReduxRouter,
-  reduxReactRouter,
-} from 'redux-router';
+  reduxRouterEnhancer,
+} from '../../src/index'; // 'redux-router'
 
 import { Provider } from 'react-redux';
 import { devTools } from 'redux-devtools';
 import { DevTools, DebugPanel, LogMonitor } from 'redux-devtools/lib/react';
-import createHistory from 'history/lib/createBrowserHistory';
 
 import routes from './routes';
 import reducer from './reducer';
 import {MOUNT_ID} from './constants';
 
 const store = compose(
-  reduxReactRouter({ createHistory }),
+  reduxRouterEnhancer({ history: browserHistory }),
   devTools()
 )(createStore)(reducer, window.__initialState);
 
 const rootComponent = (
   <Provider store={store}>
-    <ReduxRouter routes={routes} />
+    <ReduxRouter history={browserHistory} routes={routes} />
   </Provider>
 );
 

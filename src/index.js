@@ -1,6 +1,7 @@
 export routerStateReducer from './routerStateReducer';
 export ReduxRouter from './ReduxRouter';
-export reduxReactRouter from './client';
+export ReduxRouterContext from './ReduxRouterContext';
+export reduxRouterEnhancer from './client';
 export isActive from './isActive';
 
 export {

@@ -5,7 +5,6 @@ import {
   replace,
   isActive
 } from '../';
-import { REPLACE_ROUTES } from '../constants';
 
 import { createStore, combineReducers, compose, applyMiddleware } from 'redux';
 import React from 'react';
@@ -175,10 +174,6 @@ describe('reduxRouter()', () => {
     });
 
     store.dispatch(push({ pathname: '/parent' }));
-
-    store.dispatch({
-      type: REPLACE_ROUTES
-    });
 
     historyState = null;
 

@@ -48,7 +48,7 @@ class Parent extends Component {
   render() {
     return (
       <div>
-        <Link to={{ pathname: "/parent/child/321", query: { key: 'value' }}} />
+        <Link to={{ pathname: '/parent/child/321', query: { key: 'value' }}} />
         {this.props.children}
       </div>
     );
