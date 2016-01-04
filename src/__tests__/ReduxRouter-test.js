@@ -1,11 +1,10 @@
+/**
 import {
   push,
   ReduxRouter,
   reduxReactRouter,
   routerStateReducer,
 } from '../';
-
-import * as server from '../server';
 
 import React, { Component, PropTypes } from 'react';
 import { renderToString } from 'react-dom/server';
@@ -254,3 +253,4 @@ describe('<ReduxRouter>', () => {
     });
   });
 });
+ **/

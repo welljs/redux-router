@@ -1,17 +1,22 @@
 import {
-  reduxReactRouter,
+  ReduxRouter,
+  reduxRouterEnhancer,
   routerStateReducer,
   push,
   replace,
   isActive
 } from '../';
 
-import { createStore, combineReducers, compose, applyMiddleware } from 'redux';
 import React from 'react';
+import { createStore, combineReducers, compose, applyMiddleware } from 'redux';
+import { Provider } from 'react-redux';
 import { Route } from 'react-router';
-import createHistory from 'history/lib/createMemoryHistory';
+import createHistory from 'react-router/lib/createMemoryHistory';
 import useBasename from 'history/lib/useBasename';
+
+import jsdom from 'mocha-jsdom';
 import sinon from 'sinon';
+import { renderIntoDocument } from 'react-addons-test-utils';
 
 const routes = (
   <Route path="/">
@@ -22,25 +27,35 @@ const routes = (
 );
 
 describe('reduxRouter()', () => {
+  jsdom();
+
   it('adds router state to Redux store', () => {
     const reducer = combineReducers({
       router: routerStateReducer
     });
 
-    const store = reduxReactRouter({
-      createHistory,
-      routes
-    })(createStore)(reducer);
+    const history = createHistory();
 
-    const history = store.history;
+    const store = reduxRouterEnhancer({
+      history,
+    })(createStore)(reducer);
 
     const historySpy = sinon.spy();
     history.listen(() => historySpy());
 
     expect(historySpy.callCount).to.equal(1);
 
+    renderIntoDocument(
+        <Provider store={store}>
+          <ReduxRouter history={history} >
+            {routes}
+          </ReduxRouter>
+        </Provider>
+    );
 
-    store.dispatch(push({ pathname: '/parent' }));
+    expect(store.getState().router.location.pathname).to.equal('/');
+
+    history.push({ pathname: '/parent' });
     expect(store.getState().router.location.pathname).to.equal('/parent');
     expect(historySpy.callCount).to.equal(2);
 
@@ -87,12 +102,11 @@ describe('reduxRouter()', () => {
       historyState = s;
     });
 
-    const store = reduxReactRouter({
+    const store = reduxRouterEnhancer({
       history,
-      routes
     })(createStore)(reducer);
 
-    expect(reducerSpy.callCount).to.equal(2);
+    expect(reducerSpy.callCount).to.equal(1);
     expect(historySpy.callCount).to.equal(1);
 
     store.dispatch({
@@ -100,7 +114,7 @@ describe('reduxRouter()', () => {
       payload: externalState
     });
 
-    expect(reducerSpy.callCount).to.equal(4);
+    expect(reducerSpy.callCount).to.equal(2);
     expect(historySpy.callCount).to.equal(2);
     expect(historyState.pathname).to.equal('/parent/child/123');
     expect(historyState.search).to.equal('?key=value');
@@ -111,10 +125,24 @@ describe('reduxRouter()', () => {
       router: routerStateReducer
     });
 
-    const store = reduxReactRouter({
-      createHistory,
-      routes
+    const history = createHistory();
+
+    const store = reduxRouterEnhancer({
+      history,
     })(createStore)(reducer);
+
+    const historySpy = sinon.spy();
+    history.listen(() => historySpy());
+
+    expect(historySpy.callCount).to.equal(1);
+
+    renderIntoDocument(
+        <Provider store={store}>
+          <ReduxRouter history={history} >
+            {routes}
+          </ReduxRouter>
+        </Provider>
+    );
 
     store.dispatch(push({ pathname: '/parent/child/123', query: { key: 'value' } }));
     expect(store.getState().router.location.pathname)
@@ -146,9 +174,8 @@ describe('reduxRouter()', () => {
 
     const history = createHistory();
 
-    const store = reduxReactRouter({
+    const store = reduxRouterEnhancer({
       history,
-      routes
     })(createStore)(reducer);
 
     store.dispatch({ type: APPEND_STRING, string: 'Uni' });
@@ -163,10 +190,22 @@ describe('reduxRouter()', () => {
 
     const history = createHistory();
 
-    const store = reduxReactRouter({
+    const store = reduxRouterEnhancer({
       history,
-      routes
     })(createStore)(reducer);
+
+    const historySpy = sinon.spy();
+    history.listen(() => historySpy());
+
+    expect(historySpy.callCount).to.equal(1);
+
+    renderIntoDocument(
+        <Provider store={store}>
+          <ReduxRouter history={history} >
+            {routes}
+          </ReduxRouter>
+        </Provider>
+    );
 
     let historyState;
     history.listen(s => {
@@ -187,20 +226,28 @@ describe('reduxRouter()', () => {
     });
 
     const history = createHistory();
-    const historySpy = sinon.spy();
 
+    const historySpy = sinon.spy();
     history.listen(() => historySpy());
+
     expect(historySpy.callCount).to.equal(1);
 
-    compose(
-      reduxReactRouter({
+    const store = compose(
+      reduxRouterEnhancer({
         history,
-        routes,
       }),
       applyMiddleware(
         () => next => action => setTimeout(() => next(action), 0)
       )
     )(createStore)(reducer);
+
+    renderIntoDocument(
+        <Provider store={store}>
+          <ReduxRouter history={history} >
+            {routes}
+          </ReduxRouter>
+        </Provider>
+    );
 
     history.push({ pathname: '/parent' });
     expect(historySpy.callCount).to.equal(2);
@@ -220,10 +267,17 @@ describe('reduxRouter()', () => {
       basename: '/grandparent'
     });
 
-    const store = reduxReactRouter({
+    const store = reduxRouterEnhancer({
       history,
-      routes
     })(createStore)(reducer);
+
+    renderIntoDocument(
+        <Provider store={store}>
+          <ReduxRouter history={history} >
+            {routes}
+          </ReduxRouter>
+        </Provider>
+    );
 
     store.dispatch(push({ pathname: '/parent' }));
     expect(store.getState().router.location.pathname).to.eql('/parent');
@@ -236,29 +290,6 @@ describe('reduxRouter()', () => {
     expect(store.getState().router.params).to.eql({ id: '123' });
   });
 
-  describe('getRoutes()', () => {
-    it('is passed dispatch and getState', () => {
-      const reducer = combineReducers({
-        router: routerStateReducer
-      });
-
-      let store;
-      const history = createHistory();
-
-      reduxReactRouter({
-        history,
-        getRoutes: s => {
-          store = s;
-          return routes;
-        }
-      })(createStore)(reducer);
-
-      store.dispatch(push({ pathname: '/parent/child/123', query: { key: 'value' } }));
-      expect(store.getState().router.location.pathname)
-        .to.equal('/parent/child/123');
-    });
-  });
-
   describe('onEnter hook', () => {
     it('can perform redirects', () => {
       const reducer = combineReducers({
@@ -267,21 +298,26 @@ describe('reduxRouter()', () => {
 
       const history = createHistory();
 
+      const store = reduxRouterEnhancer({
+        history,
+      })(createStore)(reducer);
+
       const requireAuth = (nextState, _replaceState) => {
         _replaceState(null, '/login');
       };
 
-      const store = reduxReactRouter({
-        history,
-        routes: (
-          <Route path="/">
-            <Route path="parent">
-              <Route path="child/:id" onEnter={requireAuth}/>
-            </Route>
-            <Route path="login" />
-          </Route>
-        )
-      })(createStore)(reducer);
+      renderIntoDocument(
+          <Provider store={store}>
+            <ReduxRouter history={history} >
+              <Route path="/">
+                <Route path="parent">
+                  <Route path="child/:id" onEnter={requireAuth}/>
+                </Route>
+                <Route path="login" />
+              </Route>
+            </ReduxRouter>
+          </Provider>
+      );
 
       store.dispatch(push({ pathname: '/parent/child/123', query: { key: 'value' } }));
       expect(store.getState().router.location.pathname)
@@ -296,10 +332,17 @@ describe('reduxRouter()', () => {
 
         const history = createHistory();
 
-        const store = reduxReactRouter({
+        const store = reduxRouterEnhancer({
           history,
-          routes
         })(createStore)(reducer);
+
+        renderIntoDocument(
+            <Provider store={store}>
+              <ReduxRouter history={history} >
+                {routes}
+              </ReduxRouter>
+            </Provider>
+        );
 
         const activeSelector = isActive('/parent', { key: 'value' });
         expect(activeSelector(store.getState().router)).to.be.false;
