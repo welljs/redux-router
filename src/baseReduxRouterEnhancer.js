@@ -13,10 +13,8 @@ export default function baseReduxRouterEnhancer({
         historyMiddleware(history)
       )(createStore)(reducer, initialState);
 
-    store.history = history;
     store[ROUTER_STATE_SELECTOR] = routerStateSelector;
 
     return store;
   };
 }
-

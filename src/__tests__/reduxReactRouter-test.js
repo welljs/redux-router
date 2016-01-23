@@ -4,7 +4,6 @@ import {
   routerStateReducer,
   push,
   replace,
-  isActive
 } from '../';
 
 import React from 'react';
@@ -77,6 +76,7 @@ describe('reduxRouter()', () => {
     const externalState = {
       location: {
         pathname: '/parent/child/123',
+        search: '?key=value',
         query: { key: 'value' },
         key: 'lolkey'
       }
@@ -106,7 +106,15 @@ describe('reduxRouter()', () => {
       history,
     })(createStore)(reducer);
 
-    expect(reducerSpy.callCount).to.equal(1);
+    renderIntoDocument(
+        <Provider store={store}>
+          <ReduxRouter history={history} >
+            {routes}
+          </ReduxRouter>
+        </Provider>
+    );
+
+    expect(reducerSpy.callCount).to.equal(2);
     expect(historySpy.callCount).to.equal(1);
 
     store.dispatch({
@@ -114,7 +122,7 @@ describe('reduxRouter()', () => {
       payload: externalState
     });
 
-    expect(reducerSpy.callCount).to.equal(2);
+    expect(reducerSpy.callCount).to.equal(3);
     expect(historySpy.callCount).to.equal(2);
     expect(historyState.pathname).to.equal('/parent/child/123');
     expect(historyState.search).to.equal('?key=value');
@@ -228,7 +236,9 @@ describe('reduxRouter()', () => {
     const history = createHistory();
 
     const historySpy = sinon.spy();
-    history.listen(() => historySpy());
+    history.listen(() => {
+      historySpy();
+    });
 
     expect(historySpy.callCount).to.equal(1);
 
@@ -324,31 +334,5 @@ describe('reduxRouter()', () => {
         .to.equal('/login');
     });
 
-    describe('isActive', () => {
-      it('creates a selector for whether a pathname/query pair is active', () => {
-        const reducer = combineReducers({
-          router: routerStateReducer
-        });
-
-        const history = createHistory();
-
-        const store = reduxRouterEnhancer({
-          history,
-        })(createStore)(reducer);
-
-        renderIntoDocument(
-            <Provider store={store}>
-              <ReduxRouter history={history} >
-                {routes}
-              </ReduxRouter>
-            </Provider>
-        );
-
-        const activeSelector = isActive('/parent', { key: 'value' });
-        expect(activeSelector(store.getState().router)).to.be.false;
-        store.dispatch(push({ pathname: '/parent', query: { key: 'value' } }));
-        expect(activeSelector(store.getState().router)).to.be.true;
-      });
-    });
   });
 });
