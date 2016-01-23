@@ -1,6 +1,6 @@
 import {
+  historyMiddleware,
   ReduxRouter,
-  reduxRouterEnhancer,
   routerStateReducer,
   push,
   replace,
@@ -35,9 +35,9 @@ describe('reduxRouter()', () => {
 
     const history = createHistory();
 
-    const store = reduxRouterEnhancer({
-      history,
-    })(createStore)(reducer);
+    const createStoreWithMiddleware = applyMiddleware(historyMiddleware(history))(createStore);
+
+    const store = createStoreWithMiddleware(reducer);
 
     const historySpy = sinon.spy();
     history.listen(() => historySpy());
@@ -102,9 +102,9 @@ describe('reduxRouter()', () => {
       historyState = s;
     });
 
-    const store = reduxRouterEnhancer({
-      history,
-    })(createStore)(reducer);
+    const createStoreWithMiddleware = applyMiddleware(historyMiddleware(history))(createStore);
+
+    const store = createStoreWithMiddleware(reducer);
 
     renderIntoDocument(
         <Provider store={store}>
@@ -135,9 +135,9 @@ describe('reduxRouter()', () => {
 
     const history = createHistory();
 
-    const store = reduxRouterEnhancer({
-      history,
-    })(createStore)(reducer);
+    const createStoreWithMiddleware = applyMiddleware(historyMiddleware(history))(createStore);
+
+    const store = createStoreWithMiddleware(reducer);
 
     const historySpy = sinon.spy();
     history.listen(() => historySpy());
@@ -182,9 +182,9 @@ describe('reduxRouter()', () => {
 
     const history = createHistory();
 
-    const store = reduxRouterEnhancer({
-      history,
-    })(createStore)(reducer);
+    const createStoreWithMiddleware = applyMiddleware(historyMiddleware(history))(createStore);
+
+    const store = createStoreWithMiddleware(reducer);
 
     store.dispatch({ type: APPEND_STRING, string: 'Uni' });
     store.dispatch({ type: APPEND_STRING, string: 'directional' });
@@ -198,9 +198,9 @@ describe('reduxRouter()', () => {
 
     const history = createHistory();
 
-    const store = reduxRouterEnhancer({
-      history,
-    })(createStore)(reducer);
+    const createStoreWithMiddleware = applyMiddleware(historyMiddleware(history))(createStore);
+
+    const store = createStoreWithMiddleware(reducer);
 
     const historySpy = sinon.spy();
     history.listen(() => historySpy());
@@ -243,10 +243,8 @@ describe('reduxRouter()', () => {
     expect(historySpy.callCount).to.equal(1);
 
     const store = compose(
-      reduxRouterEnhancer({
-        history,
-      }),
       applyMiddleware(
+        historyMiddleware(history),
         () => next => action => setTimeout(() => next(action), 0)
       )
     )(createStore)(reducer);
@@ -277,9 +275,9 @@ describe('reduxRouter()', () => {
       basename: '/grandparent'
     });
 
-    const store = reduxRouterEnhancer({
-      history,
-    })(createStore)(reducer);
+    const createStoreWithMiddleware = applyMiddleware(historyMiddleware(history))(createStore);
+
+    const store = createStoreWithMiddleware(reducer);
 
     renderIntoDocument(
         <Provider store={store}>
@@ -308,9 +306,9 @@ describe('reduxRouter()', () => {
 
       const history = createHistory();
 
-      const store = reduxRouterEnhancer({
-        history,
-      })(createStore)(reducer);
+      const createStoreWithMiddleware = applyMiddleware(historyMiddleware(history))(createStore);
+
+      const store = createStoreWithMiddleware(reducer);
 
       const requireAuth = (nextState, _replaceState) => {
         _replaceState(null, '/login');

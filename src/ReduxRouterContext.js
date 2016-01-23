@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 
 import routerStateEquals from './routerStateEquals';
 import { routerDidChange } from './actionCreators';
-import { ROUTER_STATE_SELECTOR } from './constants';
 
 function memoizeRouterStateSelector(selector) {
   let previousRouterState = null;
@@ -26,11 +25,18 @@ function routerPropsFromProps(props) {
   };
 }
 
-// Only job is to pass down the selector, in here because <ReduxRouter>
-// is not used in server-side rendering
+// Only job is to pass down the selector, in here because <ReduxRouter> is not used in server-side rendering
 class ReduxRouterContextWrapper extends Component {
+  static propTypes = {
+    routerStateSelector: PropTypes.func,
+  }
+
   static contextTypes = {
     store: PropTypes.object
+  }
+
+  static defaultProps = {
+    routerStateSelector: state => state.router,
   }
 
   render() {
@@ -43,18 +49,9 @@ class ReduxRouterContextWrapper extends Component {
       );
     }
 
-    const { [ROUTER_STATE_SELECTOR]: routerStateSelector } = store;
-
-    if (!routerStateSelector) {
-      throw new Error(
-          'Redux store not configured properly for <ReduxRouter>. Make sure '
-          + 'you\'re using the reduxRouterEnhancer store enhancer.'
-      );
-    }
-
     return (
         <ReduxRouterContext
-            routerStateSelector={memoizeRouterStateSelector(routerStateSelector)}
+            routerStateSelector={memoizeRouterStateSelector(this.props.routerStateSelector)}
             {...this.props}
         />
     );

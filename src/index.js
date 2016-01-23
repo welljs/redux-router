@@ -1,7 +1,7 @@
 export routerStateReducer from './routerStateReducer';
 export ReduxRouter from './ReduxRouter';
 export ReduxRouterContext from './ReduxRouterContext';
-export reduxRouterEnhancer from './client';
+export historyMiddleware from './historyMiddleware';
 
 export {
   historyAPI,

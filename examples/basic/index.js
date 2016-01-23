@@ -1,11 +1,11 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
-import { createStore, compose, combineReducers, } from 'redux';
+import { createStore, compose, combineReducers, applyMiddleware } from 'redux';
 
 import {
   ReduxRouter,
   routerStateReducer,
-  reduxRouterEnhancer,
+  historyMiddleware,
   push,
 } from 'redux-router';
 
@@ -93,7 +93,7 @@ const reducer = combineReducers({
 });
 
 const store = compose(
-  reduxRouterEnhancer({ history: hashHistory }),
+  applyMiddleware(historyMiddleware(hashHistory)),
   devTools()
 )(createStore)(reducer);
 
