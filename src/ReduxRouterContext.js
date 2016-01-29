@@ -31,23 +31,11 @@ class ReduxRouterContextWrapper extends Component {
     routerStateSelector: PropTypes.func,
   }
 
-  static contextTypes = {
-    store: PropTypes.object
-  }
-
   static defaultProps = {
     routerStateSelector: state => state.router,
   }
 
   render() {
-    const { store } = this.context;
-
-    if (!store) {
-      throw new Error(
-        'Redux store missing from context of <ReduxRouter>. Make sure you\'re '
-        + 'using a <Provider>'
-      );
-    }
 
     return (
         <ReduxRouterContext
