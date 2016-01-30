@@ -75,14 +75,16 @@ class Parent extends Component {
   }
 }
 
+@connect((state) => ({ router: state.router }))
 class Child extends Component {
   render() {
-    const { params: { id }} = this.props;
+    const { params: { id }, router: { params: { id : idFromState }}} = this.props;
 
     return (
       <div>
         <h2>Child</h2>
-        {id && <p>{id}</p>}
+        {id && <p>Id from React-Router Props: {id}</p>}
+        {idFromState && <p>Id from Redux-Router Store: {idFromState}</p>}
       </div>
     );
   }
