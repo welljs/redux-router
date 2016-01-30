@@ -54,21 +54,22 @@ class ReduxRouterContext extends Component {
 
   static propTypes = {
     router: PropTypes.object,
-    // End Router State from React-Router
-    // Start from Redux-Router
     routerDidChange: PropTypes.func.isRequired,
     routerState: PropTypes.object,
-    // End from Redux-Router
   }
 
   componentWillMount() {
+    // On mount, sync to the store to React-Router props
     this.props.routerDidChange(routerPropsFromProps(this.props));
   }
 
   componentWillReceiveProps(newProps) {
+    // If we have new routing props from React-Router and it doesnt match our store, Update the store
     if (!routerStateEquals(routerPropsFromProps(newProps), routerPropsFromProps(this.props)) &&
         !routerStateEquals(routerPropsFromProps(newProps), newProps.routerState)) {
       this.props.routerDidChange(routerPropsFromProps(newProps));
+    // If we have a new store state and it doesnt match the next routing props, transition the router to it
+    // This is common when replaying devTools
     } else if (!routerStateEquals(newProps.routerState, this.props.routerState) &&
                !routerStateEquals(routerPropsFromProps(newProps), newProps.routerState)) {
       if (newProps.routerState) {
@@ -81,7 +82,7 @@ class ReduxRouterContext extends Component {
     const { routerDidChange, routerState, ...others } = this.props;
     const newRouterProps = {
       ...others,
-      ...routerState,
+      ...routerState, // Override react-router's props with the store props
     };
     return <RouterContext {...newRouterProps} />;
   }
